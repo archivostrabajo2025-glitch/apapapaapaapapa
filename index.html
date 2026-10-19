@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="es">
-<head>
+<!DOCTYPE html><html lang="es"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Consola de Administración</title>
@@ -118,6 +116,15 @@
       grid-row: 2;
     }
 
+    .credential-note {
+      grid-column: 1 / -1;
+      grid-row: 4;
+      margin: 0;
+      color: #555;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
     .station-field {
       grid-column: 2;
       grid-row: 3;
@@ -226,7 +233,7 @@
 
     .user-table {
       width: 100%;
-      min-width: 620px;
+      min-width: 500px;
       border-collapse: collapse;
       background: #fff;
       font-size: 12px;
@@ -341,17 +348,17 @@
       <img class="login-icon" src="./login.png" alt="">
       <div class="field user-field">
         <label for="usuario">Usuario:</label>
-        <input id="usuario" name="usuario" type="text" autocomplete="username" required>
+        <input id="usuario" name="usuario" type="text" autocomplete="username" required="">
       </div>
       <div class="field secondary-user-field">
-        <label for="usuario2">Clave:</label>
-        <input id="usuario2" name="usuario2" type="text" autocomplete="off">
+        <label for="usuario2">Clave de prueba:</label>
+        <input id="usuario2" name="claveDePrueba" type="password" autocomplete="new-password" aria-describedby="credentialNote">
       </div>
       <div class="field station-field">
         <label for="estacion">Estación:</label>
         <select id="estacion" name="estacion">
           <option>ADM000</option>
-          <option selected>ADM001</option>
+          <option selected="">ADM001</option>
           <option>ADM002</option>
           <option>ADM003</option>
           <option>ADM004</option>
@@ -363,24 +370,24 @@
         <button type="submit">Ok</button>
         <button id="cancelLogin" type="button">Cancelar</button>
       </div>
+      <p class="credential-note" id="credentialNote">Demo local: usa datos ficticios. La clave no se guarda ni se envía.</p>
     </form>
   </main>
-  <p class="login-notice" id="loginNotice" role="status" hidden></p>
+  <p class="login-notice" id="loginNotice" role="status" hidden=""></p>
 
-  <main class="admin-window" id="adminPanel" aria-labelledby="admin-title" hidden>
+  <main class="admin-window" id="adminPanel" aria-labelledby="admin-title" hidden="">
     <div class="title-bar" id="admin-title">Administración de usuarios</div>
     <section class="admin-content">
       <div class="admin-heading">
         <h1>Solicitudes de acceso</h1>
         <button id="showLogin" type="button">Volver al inicio</button>
       </div>
-      <p class="admin-note">Las solicitudes aparecen para validación. Esta demostración conserva los usuarios, la estación y el estado en este navegador.</p>
+      <p class="admin-note">Registros de prueba guardados solo en este navegador. No se guardan claves y no se autentican usuarios.</p>
       <div class="user-table-wrap">
         <table class="user-table">
           <thead>
             <tr>
               <th scope="col">Usuario</th>
-              <th scope="col">Usuario 2</th>
               <th scope="col">Estación</th>
               <th scope="col">Estado</th>
               <th scope="col">Acciones</th>
@@ -389,7 +396,7 @@
           <tbody id="userRows"></tbody>
         </table>
       </div>
-      <p class="demo-label">Demo local: no conecta a un servidor ni autentica usuarios.</p>
+      <p class="demo-label">Este panel es solo para pruebas locales. Cada navegador tiene sus propios registros.</p>
     </section>
   </main>
 
@@ -411,12 +418,11 @@
 
         const requests = JSON.parse(savedRequests);
         if (!Array.isArray(requests)) throw new Error("Formato de solicitudes inválido");
-        const sanitizedRequests = requests.map(({ id, name, secondaryName, station, status }) => ({
-          id,
-          name,
-          secondaryName,
-          station,
-          status
+        const sanitizedRequests = requests.map((request) => ({
+          id: request.id,
+          name: request.name,
+          station: request.station,
+          status: request.status
         }));
         localStorage.setItem(requestStorageKey, JSON.stringify(sanitizedRequests));
         return sanitizedRequests;
@@ -429,10 +435,9 @@
 
     function saveRequests() {
       try {
-        const safeRequests = pendingUsers.map(({ id, name, secondaryName, station, status }) => ({
+        const safeRequests = pendingUsers.map(({ id, name, station, status }) => ({
           id,
           name,
-          secondaryName,
           station,
           status
         }));
@@ -451,7 +456,7 @@
       if (pendingUsers.length === 0) {
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-        cell.colSpan = 5;
+        cell.colSpan = 4;
         cell.textContent = "No hay solicitudes todavía.";
         row.append(cell);
         userRows.append(row);
@@ -461,13 +466,11 @@
       for (const user of pendingUsers) {
         const row = document.createElement("tr");
         const nameCell = document.createElement("td");
-        const secondaryNameCell = document.createElement("td");
         const stationCell = document.createElement("td");
         const statusCell = document.createElement("td");
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
-        secondaryNameCell.textContent = user.secondaryName || "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
@@ -485,7 +488,7 @@
           actionsCell.textContent = "Sin acciones";
         }
 
-        row.append(nameCell, secondaryNameCell, stationCell, statusCell, actionsCell);
+        row.append(nameCell, stationCell, statusCell, actionsCell);
         userRows.append(row);
       }
     }
@@ -493,22 +496,24 @@
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const nameInput = document.getElementById("usuario");
-      const secondaryNameInput = document.getElementById("usuario2");
+      const testKeyInput = document.getElementById("usuario2");
       const stationInput = document.getElementById("estacion");
 
       pendingUsers.unshift({
         id: Date.now(),
         name: nameInput.value.trim(),
-        secondaryName: secondaryNameInput.value.trim(),
         station: stationInput.value,
         status: "Pendiente"
       });
 
       if (!saveRequests()) {
         pendingUsers.shift();
+        testKeyInput.value = "";
         return;
       }
-      loginNotice.hidden = true;
+      testKeyInput.value = "";
+      loginNotice.textContent = "Registro de prueba guardado en este navegador. La clave no se guardó.";
+      loginNotice.hidden = false;
       loginForm.reset();
       renderUsers();
     });
@@ -551,5 +556,5 @@
       adminPanel.hidden = true;
     }
   </script>
-</body>
-</html>
+
+</body></html>
