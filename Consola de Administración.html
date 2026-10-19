@@ -113,12 +113,12 @@
       grid-row: 1;
     }
 
-    .credential-field {
+    .secondary-user-field {
       grid-column: 2;
       grid-row: 2;
     }
 
-    .credential-note {
+    .form-note {
       grid-column: 1 / -1;
       grid-row: 4;
       margin: 0;
@@ -352,9 +352,9 @@
         <label for="usuario">Usuario:</label>
         <input id="usuario" name="usuario" type="text" autocomplete="username" required>
       </div>
-      <div class="field credential-field">
-        <label for="clave">Clave:</label>
-        <input id="clave" name="claveDePrueba" type="password" autocomplete="new-password" aria-describedby="credentialNote">
+      <div class="field secondary-user-field">
+        <label for="usuario2">Usuario 2:</label>
+        <input id="usuario2" name="usuario2" type="text" autocomplete="off">
       </div>
       <div class="field station-field">
         <label for="estacion">Estación:</label>
@@ -372,7 +372,7 @@
         <button type="submit">Ok</button>
         <button id="cancelLogin" type="button">Cancelar</button>
       </div>
-      <p class="credential-note" id="credentialNote">Prueba local: usa identificadores ficticios. La clave no se guarda ni se envía.</p>
+      <p class="form-note">Prueba local: usa identificadores ficticios, nunca contraseñas reales.</p>
     </form>
   </main>
   <p class="login-notice" id="loginNotice" role="status" hidden></p>
@@ -384,7 +384,7 @@
         <h1>Solicitudes de acceso</h1>
         <button id="showLogin" type="button">Volver al inicio</button>
       </div>
-      <p class="admin-note">Registros de prueba guardados solo en este navegador; no se guardan claves ni se autentican usuarios.</p>
+      <p class="admin-note">Usuario 2 contiene identificadores ficticios guardados solo en este navegador; no se guardan claves ni se autentican usuarios.</p>
       <div class="user-table-wrap">
         <table class="user-table">
           <thead>
@@ -424,6 +424,7 @@
         const sanitizedRequests = requests.map((request) => ({
           id: request.id,
           name: request.name,
+          user2: request.user2,
           station: request.station,
           status: request.status
         }));
@@ -438,9 +439,10 @@
 
     function saveRequests() {
       try {
-        const safeRequests = pendingUsers.map(({ id, name, station, status }) => ({
+        const safeRequests = pendingUsers.map(({ id, name, user2, station, status }) => ({
           id,
           name,
+          user2,
           station,
           status
         }));
@@ -475,7 +477,7 @@
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
-        user2Cell.textContent = "—";
+        user2Cell.textContent = user.user2 || "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
@@ -501,23 +503,22 @@
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const nameInput = document.getElementById("usuario");
-      const testKeyInput = document.getElementById("clave");
+      const user2Input = document.getElementById("usuario2");
       const stationInput = document.getElementById("estacion");
 
       pendingUsers.unshift({
         id: Date.now(),
         name: nameInput.value.trim(),
+        user2: user2Input.value.trim(),
         station: stationInput.value,
         status: "Pendiente"
       });
 
       if (!saveRequests()) {
         pendingUsers.shift();
-        testKeyInput.value = "";
         return;
       }
-      testKeyInput.value = "";
-      loginNotice.textContent = "Registro de prueba guardado en este navegador. La clave no se guardó.";
+      loginNotice.textContent = "Registro de prueba guardado en este navegador. Usa solo identificadores ficticios.";
       loginNotice.hidden = false;
       loginForm.reset();
       renderUsers();
