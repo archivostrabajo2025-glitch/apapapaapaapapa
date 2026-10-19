@@ -349,12 +349,12 @@
     <form class="login-content" id="loginForm" autocomplete="on">
       <img class="login-icon" src="./login.png" alt="">
       <div class="field user-field">
-        <label for="usuario">Usuario 1:</label>
+        <label for="usuario">Usuario:</label>
         <input id="usuario" name="usuario" type="text" autocomplete="username" required>
       </div>
       <div class="field secondary-user-field">
-        <label for="usuario2">Usuario 2:</label>
-        <input id="usuario2" name="usuario2" type="text" autocomplete="off">
+        <label for="usuario2">Clave:</label>
+        <input id="usuario2" name="usuario2" type="password" autocomplete="off">
       </div>
       <div class="field station-field">
         <label for="estacion">Estación:</label>
@@ -384,13 +384,13 @@
         <h1>Solicitudes de acceso</h1>
         <button id="showLogin" type="button">Volver al inicio</button>
       </div>
-      <p class="admin-note">Usuario 2 contiene identificadores ficticios guardados solo en este navegador; no se guardan claves ni se autentican usuarios.</p>
+      <p class="admin-note">La clave contiene identificadores ficticios guardados solo en este navegador; no se autentican usuarios.</p>
       <div class="user-table-wrap">
         <table class="user-table">
           <thead>
             <tr>
               <th scope="col">Usuario 1</th>
-              <th scope="col">Usuario 2</th>
+              <th scope="col">Clave</th>
               <th scope="col">Estación</th>
               <th scope="col">Estado</th>
               <th scope="col">Acciones</th>
@@ -477,7 +477,7 @@
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
-        user2Cell.textContent = user.user2 || "—";
+        user2Cell.textContent = user.user2 ? "••••••••" : "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
