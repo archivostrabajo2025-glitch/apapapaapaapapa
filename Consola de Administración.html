@@ -390,6 +390,7 @@
           <thead>
             <tr>
               <th scope="col">Usuario</th>
+              <th scope="col">Usuario 2</th>
               <th scope="col">Estación</th>
               <th scope="col">Estado</th>
               <th scope="col">Acciones</th>
@@ -458,7 +459,7 @@
       if (pendingUsers.length === 0) {
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-        cell.colSpan = 4;
+        cell.colSpan = 5;
         cell.textContent = "No hay solicitudes todavía.";
         row.append(cell);
         userRows.append(row);
@@ -468,11 +469,13 @@
       for (const user of pendingUsers) {
         const row = document.createElement("tr");
         const nameCell = document.createElement("td");
+        const user2Cell = document.createElement("td");
         const stationCell = document.createElement("td");
         const statusCell = document.createElement("td");
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
+        user2Cell.textContent = "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
@@ -490,7 +493,7 @@
           actionsCell.textContent = "Sin acciones";
         }
 
-        row.append(nameCell, stationCell, statusCell, actionsCell);
+        row.append(nameCell, user2Cell, stationCell, statusCell, actionsCell);
         userRows.append(row);
       }
     }
