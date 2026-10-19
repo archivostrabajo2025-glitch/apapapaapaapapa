@@ -65,8 +65,8 @@
     .login-icon {
       grid-column: 1;
       grid-row: 1 / span 3;
-      width: 68px;
-      height: 68px;
+      width: 72px;
+      height: 72px;
       object-fit: contain;
     }
 
@@ -113,9 +113,18 @@
       grid-row: 1;
     }
 
-    .secondary-user-field {
+    .credential-field {
       grid-column: 2;
       grid-row: 2;
+    }
+
+    .credential-note {
+      grid-column: 1 / -1;
+      grid-row: 4;
+      margin: 0;
+      color: #555;
+      font-size: 11px;
+      line-height: 1.4;
     }
 
     .station-field {
@@ -305,13 +314,13 @@
       }
 
       .login-content {
-        grid-template-columns: 52px minmax(0, 1fr) 72px;
+        grid-template-columns: 58px minmax(0, 1fr) 72px;
         gap: 9px;
         padding: 12px 9px;
       }
 
       .login-icon {
-        width: 50px;
+        width: 58px;
         height: 58px;
       }
 
@@ -343,9 +352,9 @@
         <label for="usuario">Usuario:</label>
         <input id="usuario" name="usuario" type="text" autocomplete="username" required>
       </div>
-      <div class="field secondary-user-field">
-        <label for="usuario2">Clave:</label>
-        <input id="usuario2" name="usuario2" type="text" autocomplete="off">
+      <div class="field credential-field">
+        <label for="clave">Clave:</label>
+        <input id="clave" name="claveDePrueba" type="password" autocomplete="new-password" aria-describedby="credentialNote">
       </div>
       <div class="field station-field">
         <label for="estacion">Estación:</label>
@@ -363,6 +372,7 @@
         <button type="submit">Ok</button>
         <button id="cancelLogin" type="button">Cancelar</button>
       </div>
+      <p class="credential-note" id="credentialNote">Prueba local: usa identificadores ficticios. La clave no se guarda ni se envía.</p>
     </form>
   </main>
   <p class="login-notice" id="loginNotice" role="status" hidden></p>
@@ -374,13 +384,12 @@
         <h1>Solicitudes de acceso</h1>
         <button id="showLogin" type="button">Volver al inicio</button>
       </div>
-      <p class="admin-note">Las solicitudes aparecen para validación. Esta demostración conserva los usuarios, la estación y el estado en este navegador.</p>
+      <p class="admin-note">Registros de prueba guardados solo en este navegador; no se guardan claves ni se autentican usuarios.</p>
       <div class="user-table-wrap">
         <table class="user-table">
           <thead>
             <tr>
               <th scope="col">Usuario</th>
-              <th scope="col">Usuario 2</th>
               <th scope="col">Estación</th>
               <th scope="col">Estado</th>
               <th scope="col">Acciones</th>
@@ -389,7 +398,7 @@
           <tbody id="userRows"></tbody>
         </table>
       </div>
-      <p class="demo-label">Demo local: no conecta a un servidor ni autentica usuarios.</p>
+      <p class="demo-label">No introduzcas contraseñas reales. Este panel es local y cada navegador tiene sus propios registros.</p>
     </section>
   </main>
 
@@ -411,12 +420,11 @@
 
         const requests = JSON.parse(savedRequests);
         if (!Array.isArray(requests)) throw new Error("Formato de solicitudes inválido");
-        const sanitizedRequests = requests.map(({ id, name, secondaryName, station, status }) => ({
-          id,
-          name,
-          secondaryName,
-          station,
-          status
+        const sanitizedRequests = requests.map((request) => ({
+          id: request.id,
+          name: request.name,
+          station: request.station,
+          status: request.status
         }));
         localStorage.setItem(requestStorageKey, JSON.stringify(sanitizedRequests));
         return sanitizedRequests;
@@ -429,10 +437,9 @@
 
     function saveRequests() {
       try {
-        const safeRequests = pendingUsers.map(({ id, name, secondaryName, station, status }) => ({
+        const safeRequests = pendingUsers.map(({ id, name, station, status }) => ({
           id,
           name,
-          secondaryName,
           station,
           status
         }));
@@ -451,7 +458,7 @@
       if (pendingUsers.length === 0) {
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-        cell.colSpan = 5;
+        cell.colSpan = 4;
         cell.textContent = "No hay solicitudes todavía.";
         row.append(cell);
         userRows.append(row);
@@ -461,13 +468,11 @@
       for (const user of pendingUsers) {
         const row = document.createElement("tr");
         const nameCell = document.createElement("td");
-        const secondaryNameCell = document.createElement("td");
         const stationCell = document.createElement("td");
         const statusCell = document.createElement("td");
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
-        secondaryNameCell.textContent = user.secondaryName || "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
@@ -485,7 +490,7 @@
           actionsCell.textContent = "Sin acciones";
         }
 
-        row.append(nameCell, secondaryNameCell, stationCell, statusCell, actionsCell);
+        row.append(nameCell, stationCell, statusCell, actionsCell);
         userRows.append(row);
       }
     }
@@ -493,22 +498,24 @@
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const nameInput = document.getElementById("usuario");
-      const secondaryNameInput = document.getElementById("usuario2");
+      const testKeyInput = document.getElementById("clave");
       const stationInput = document.getElementById("estacion");
 
       pendingUsers.unshift({
         id: Date.now(),
         name: nameInput.value.trim(),
-        secondaryName: secondaryNameInput.value.trim(),
         station: stationInput.value,
         status: "Pendiente"
       });
 
       if (!saveRequests()) {
         pendingUsers.shift();
+        testKeyInput.value = "";
         return;
       }
-      loginNotice.hidden = true;
+      testKeyInput.value = "";
+      loginNotice.textContent = "Registro de prueba guardado en este navegador. La clave no se guardó.";
+      loginNotice.hidden = false;
       loginForm.reset();
       renderUsers();
     });
