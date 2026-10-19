@@ -353,8 +353,8 @@
         <input id="usuario" name="usuario" type="text" autocomplete="username" required>
       </div>
       <div class="field secondary-user-field">
-        <label for="usuario2">Clave:</label>
-        <input id="usuario2" name="usuario2" type="password" autocomplete="off">
+        <label for="usuario2">Usuario 2:</label>
+        <input id="usuario2" name="usuario2" type="text" autocomplete="off">
       </div>
       <div class="field station-field">
         <label for="estacion">Estación:</label>
@@ -383,13 +383,13 @@
         <h1>Solicitudes de acceso</h1>
         <button id="showLogin" type="button">Volver al inicio</button>
       </div>
-      <p class="admin-note">La clave contiene identificadores ficticios guardados solo en este navegador; no se autentican usuarios.</p>
+      <p class="admin-note">Los datos se guardan solo en este navegador; no se autentican usuarios.</p>
       <div class="user-table-wrap">
         <table class="user-table">
           <thead>
             <tr>
               <th scope="col">Usuario 1</th>
-              <th scope="col">Clave</th>
+              <th scope="col">Usuario 2</th>
               <th scope="col">Estación</th>
               <th scope="col">Estado</th>
               <th scope="col">Acciones</th>
@@ -398,7 +398,7 @@
           <tbody id="userRows"></tbody>
         </table>
       </div>
-      <p class="demo-label">No introduzcas contraseñas reales. Este panel es local y cada navegador tiene sus propios registros.</p>
+      <p class="demo-label">Este panel es local y cada navegador tiene sus propios registros.</p>
     </section>
   </main>
 
@@ -409,13 +409,16 @@
     const showLoginButton = document.getElementById("showLogin");
     const loginNotice = document.getElementById("loginNotice");
     const userRows = document.getElementById("userRows");
-    const requestStorageKey = "consola-admin-user-requests";
+    const requestStorageKey = "consola-admin-user-requests-v2";
+    const legacyRequestStorageKey = "consola-admin-user-requests";
     let pendingUsers = loadRequests();
     const isAdminView = new URLSearchParams(window.location.search).get("view") === "admin";
 
     function loadRequests() {
       try {
-        const savedRequests = localStorage.getItem(requestStorageKey);
+        const currentRequests = localStorage.getItem(requestStorageKey);
+        const isLegacyData = !currentRequests;
+        const savedRequests = currentRequests || localStorage.getItem(legacyRequestStorageKey);
         if (!savedRequests) return [];
 
         const requests = JSON.parse(savedRequests);
@@ -423,11 +426,12 @@
         const sanitizedRequests = requests.map((request) => ({
           id: request.id,
           name: request.name,
-          user2: request.user2,
+          user2: isLegacyData ? "" : request.user2,
           station: request.station,
           status: request.status
         }));
         localStorage.setItem(requestStorageKey, JSON.stringify(sanitizedRequests));
+        if (isLegacyData) localStorage.removeItem(legacyRequestStorageKey);
         return sanitizedRequests;
       } catch (error) {
         loginNotice.textContent = "No se pudieron cargar las solicitudes guardadas en este navegador.";
@@ -476,7 +480,7 @@
         const actionsCell = document.createElement("td");
 
         nameCell.textContent = user.name;
-        user2Cell.textContent = user.user2 ? "••••••••" : "—";
+        user2Cell.textContent = user.user2 || "—";
         stationCell.textContent = user.station;
         statusCell.textContent = user.status;
         statusCell.className = `status-${user.status.toLowerCase()}`;
